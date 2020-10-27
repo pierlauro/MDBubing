@@ -1,0 +1,6 @@
+# All hidden files/folders
+.*
+
+# Ignore Gradle build output directories
+bin
+build
