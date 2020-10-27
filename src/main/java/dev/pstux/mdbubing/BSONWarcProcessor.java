@@ -34,7 +34,14 @@ public class BSONWarcProcessor implements Processor<Document> {
 
 	@Override
 	public Document process(WarcRecord r, long storePosition) {
-		// TODO check record size <= 16MB
+		// Optimistic assumption: payload size < 16MB --> document size < 16MB.
+		// It's not worth it to compute the exact document size for each record.
+		// If document size is > 16 MB, the insert in MongoDB will simply fail.
+		if(r.getWarcContentLength() > 16 * 1024 * 1024) {
+			// TODO log error with record ID
+			return null;
+		}
+
 		Document obj = new Document();
 		for(Header h: r.getWarcHeaders().getAllHeaders()) {
 			obj.append(h.getName(), h.getValue());
@@ -49,15 +56,15 @@ public class BSONWarcProcessor implements Processor<Document> {
 			s = s.substring(s.length() - (int)r.getWarcContentLength());
 			obj.append("record", s);
 		} catch (IOException e) {
-			// TODO add logging
+			// TODO log error with record ID
 		}
-		System.out.println(obj.toJson());
+
 		return obj;
 	}
 
 	void processAdditionalHeaders(WarcRecord r, Document obj) {
 		AbstractWarcRecord record = (AbstractWarcRecord)r;
-		
+
 		// There could be duplicate header names (e.g. multiple Set-Cookie)
 		Map<String, Object> headers = new HashMap<String, Object>();
 
@@ -77,7 +84,7 @@ public class BSONWarcProcessor implements Processor<Document> {
 					headers.put(name, list);
 					continue;
 				}
-				
+
 				@SuppressWarnings("unchecked")
 				ArrayList<String> list = (ArrayList<String>)current;
 				list.add(value);
