@@ -1,6 +1,6 @@
 plugins {
-    id 'java-library'
-    id 'com.github.sherter.google-java-format' version '0.9'
+	id 'java-library'
+	id 'com.github.sherter.google-java-format' version '0.9'
 }
 
 repositories {
@@ -12,13 +12,13 @@ dependencies {
 	compile group: 'it.unimi.dsi', name: 'dsiutils', version: '2.6.8'
 	compile group: 'org.mongodb', name: 'bson', version: '4.1.1'
 	compile group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.4.13'
-	compile 'org.mongodb:mongodb-driver-sync:4.1.1'
+	compile group: 'org.mongodb', name: 'mongodb-driver-sync', version: '4.1.1'
 	compile group: 'com.martiansoftware', name: 'jsap', version: '2.1'
 	compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
 
-	testCompile 'junit:junit:4.12'
-	testCompile 'org.mockito:mockito-core:2.+'
-	testCompile 'org.powermock:powermock-core:2.0.7'
+	testCompile group: 'junit', name: 'junit', version: '4.12'
+	testCompile group: 'org.mockito', name: 'mockito-core', version: '2.+'
+	testCompile group: 'org.powermock', name: 'powermock-core', version:'2.0.7'
 	testCompile group: 'org.powermock', name: 'powermock-api-mockito2', version: '2.0.7'
 	testCompile group: 'org.powermock', name: 'powermock-module-junit4', version: '2.0.7'
 }
