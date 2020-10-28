@@ -19,6 +19,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.result.InsertOneResult;
 
 import it.unimi.di.law.warc.io.UncompressedWarcReader;
 import it.unimi.di.law.warc.io.WarcFormatException;
@@ -26,13 +27,13 @@ import it.unimi.di.law.warc.io.WarcReader;
 import it.unimi.di.law.warc.records.WarcRecord;
 
 public class WarcToMongo {
-	private static class Configuration{
+	public static class W2MConfiguration{
 		private String connectionString;
 		private String database;
 		private String collection;
 		private String warcFilePath;
 
-		public Configuration(Properties props) throws Exception {
+		public W2MConfiguration(Properties props) throws Exception {
 			for(Field f: this.getClass().getDeclaredFields()) {
 				f.setAccessible(true);
 				String name = f.getName();
@@ -46,7 +47,7 @@ public class WarcToMongo {
 
 		public static String getRequiredParameters() throws Exception{
 			StringBuffer sb = new StringBuffer("Required configuration properties:\n");
-			Arrays.stream(Configuration.class.getDeclaredFields()).forEach(f -> sb.append("\t- " + f.getName() + "\n"));
+			Arrays.stream(W2MConfiguration.class.getDeclaredFields()).forEach(f -> sb.append("\t- " + f.getName() + "\n"));
 			return sb.toString();
 		}
 	}
@@ -58,7 +59,7 @@ public class WarcToMongo {
 		final SimpleJSAP jsap = new SimpleJSAP(
 				WarcToMongo.class.getName(), "Starts a WarcToMongo...." /* TODO improve description */,
 				new Parameter[] {
-						new FlaggedOption(PROPERTIES_FILE_OPTION, JSAP.STRING_PARSER, JSAP.NO_DEFAULT, JSAP.REQUIRED, 'P', PROPERTIES_FILE_OPTION, "The properties used to configure WarcToMongo." + Configuration.getRequiredParameters()),
+						new FlaggedOption(PROPERTIES_FILE_OPTION, JSAP.STRING_PARSER, JSAP.NO_DEFAULT, JSAP.REQUIRED, 'P', PROPERTIES_FILE_OPTION, "The properties used to configure WarcToMongo." + W2MConfiguration.getRequiredParameters()),
 				}
 				);
 
@@ -69,15 +70,10 @@ public class WarcToMongo {
 		}
 
 		// Load configuration
-		FileInputStream fis = new FileInputStream(jsapResult.getString(PROPERTIES_FILE_OPTION));
-		Properties configProperties =  new Properties();
-		configProperties.load(fis);
-		Configuration configuration = new Configuration(configProperties);
+		W2MConfiguration configuration = loadConfiguration(jsapResult.getString(PROPERTIES_FILE_OPTION));
 
 		// Initialize MongoDB entities
-		MongoClient mongoClient = MongoClients.create(configuration.connectionString);
-		MongoDatabase database = mongoClient.getDatabase(configuration.database);
-		MongoCollection<Document> coll = database.getCollection(configuration.collection);
+		MongoCollection<Document> coll = initializeConnection(configuration);
 
 		// Initialize WARC reader on the provided file
 		URL url = new File(configuration.warcFilePath).toURI().toURL();
@@ -97,10 +93,30 @@ public class WarcToMongo {
 				// TODO log exception
 				continue;
 			}
-			Document d = BSONWarcProcessor.INSTANCE.process(record, 0);
-			if(d != null) {
-				coll.insertOne(d);
-			}
+
+			insertRecordInCollection(coll, record);
 		}
+		System.out.println(coll.countDocuments());
+	}
+
+	public static W2MConfiguration loadConfiguration(final String configFilePath) throws Exception {
+		FileInputStream fis = new FileInputStream(configFilePath);
+		Properties configProperties =  new Properties();
+		configProperties.load(fis);
+		return new W2MConfiguration(configProperties);
+	}
+
+	public static MongoCollection<Document> initializeConnection(final W2MConfiguration config){
+		MongoClient mongoClient = MongoClients.create(config.connectionString);
+		MongoDatabase database = mongoClient.getDatabase(config.database);
+		return database.getCollection(config.collection);
+	}
+
+	public static InsertOneResult insertRecordInCollection(MongoCollection<Document> coll, WarcRecord record) {
+		Document d = BSONWarcProcessor.INSTANCE.process(record, 0);
+		if(d != null) {
+			return coll.insertOne(d);
+		}
+		return null;
 	}
 }
