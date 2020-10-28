@@ -18,10 +18,9 @@ public class BSONWarcProcessor implements Processor<Document> {
   public static final String ADDITIONAL_HEADERS_MDB_FIELD_NAME = "headers";
   public static final String PAYLOAD_MDB_FIELD_NAME = "payload";
 
-  private BSONWarcProcessor() {}
-
-  private static final ByteArrayOutputStream os = new ByteArrayOutputStream();
-  private static final ByteArraySessionOutputBuffer buf = new ByteArraySessionOutputBuffer();
+  // TODO Replace the two following static fields to allow multithreading
+  private final ByteArrayOutputStream os = new ByteArrayOutputStream();
+  private final ByteArraySessionOutputBuffer buf = new ByteArraySessionOutputBuffer();
 
   @Override
   public void close() throws IOException {

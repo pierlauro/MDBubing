@@ -64,7 +64,7 @@ public class WarcToMongo {
     final SimpleJSAP jsap =
         new SimpleJSAP(
             WarcToMongo.class.getName(),
-            "Starts a WarcToMongo...." /* TODO improve description */,
+            "Starts a WarcToMongo agent to import a WARC file into a MongoDB collection",
             new Parameter[] {
               new FlaggedOption(
                   PROPERTIES_FILE_OPTION,
@@ -114,7 +114,6 @@ public class WarcToMongo {
 
       insertRecordInCollection(coll, record);
     }
-    System.out.println(coll.countDocuments());
   }
 
   public static WarcToMongoConfiguration loadConfiguration(final String configFilePath)
@@ -132,6 +131,7 @@ public class WarcToMongo {
     return database.getCollection(config.collection);
   }
 
+  // TODO allow to specify write concerns
   public static InsertOneResult insertRecordInCollection(
       MongoCollection<Document> coll, WarcRecord record) {
     Document d = BSONWarcProcessor.INSTANCE.process(record, 0);
