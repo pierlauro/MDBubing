@@ -16,6 +16,7 @@ import it.unimi.di.law.warc.util.ByteArraySessionOutputBuffer;
 
 public class BSONWarcProcessor implements Processor<Document> {
 	public static final BSONWarcProcessor INSTANCE = new BSONWarcProcessor();
+	public static final long MDB_DOCUMENT_SIZE_LIMIT = 16 * 1024 * 1024;
 	public static final String ADDITIONAL_HEADERS_MDB_FIELD_NAME = "headers";
 	public static final String PAYLOAD_MDB_FIELD_NAME = "payload";
 	private BSONWarcProcessor() {}
@@ -39,7 +40,7 @@ public class BSONWarcProcessor implements Processor<Document> {
 		// Optimistic assumption: payload size < 16MB --> document size < 16MB.
 		// It's not worth it to compute the exact document size for each record.
 		// If document size is > 16 MB, the insert in MongoDB will simply fail.
-		if(r.getWarcContentLength() > 16 * 1024 * 1024) {
+		if(r.getWarcContentLength() >= MDB_DOCUMENT_SIZE_LIMIT) {
 			// TODO log error with record ID
 			return null;
 		}

@@ -1,6 +1,7 @@
 package dev.pstux.mdbubing;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import org.apache.http.Header;
 import org.bson.Document;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import it.unimi.di.law.warc.io.UncompressedWarcReader;
 import it.unimi.di.law.warc.io.WarcReader;
@@ -94,5 +96,14 @@ public class BSONWarcProcessorTest {
 
 		// Canary ensuring at least one duplicated header was encountered/tested
 		assertTrue(foundDuplicateField);
+	}
+
+	@Test
+	// Test that the processor doesn't process records with payload size >= 16MB
+	public void testRecordSizeExceedsMDBLimit() {
+		WarcRecord hugeRecord = Mockito.mock(WarcRecord.class);
+		long sizeLimit = BSONWarcProcessor.MDB_DOCUMENT_SIZE_LIMIT;
+		Mockito.doReturn(sizeLimit).when(hugeRecord).getWarcContentLength();
+		assertNull(processor.process(hugeRecord, 0));
 	}
 }

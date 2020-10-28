@@ -13,4 +13,5 @@ dependencies {
 	compile group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.4.13'
 
     testImplementation 'junit:junit:4.12'
+    testImplementation 'org.mockito:mockito-core:2.+'
 }
