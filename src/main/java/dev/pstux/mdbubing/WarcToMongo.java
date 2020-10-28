@@ -51,7 +51,7 @@ public class WarcToMongo {
 		}
 	}
 
-	private static final String PROPERTIES_FILE_OPTION = "properties";		
+	private static final String PROPERTIES_FILE_OPTION = "properties";
 
 	public static void main(String[] args) throws Exception {
 		// Parse command line options
@@ -64,6 +64,7 @@ public class WarcToMongo {
 
 		final JSAPResult jsapResult = jsap.parse(args);
 		if (jsap.messagePrinted()) {
+			System.err.println("Usage: java " + WarcToMongo.class.getName() + " " + jsap.getUsage());
 			System.exit(1);
 		}
 
