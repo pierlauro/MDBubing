@@ -14,15 +14,16 @@ public class MongoWarcWriter implements WarcWriter {
 	private MongoCollection<Document> collection;
 
 	public MongoWarcWriter(final String configFilePath) throws Exception {
-		W2MConfiguration configuration = WarcToMongo.loadConfiguration(configFilePath);
+		this(WarcToMongo.loadConfiguration(configFilePath));
+	}
 
-		// Initialize MongoDB entities
+	public MongoWarcWriter(final W2MConfiguration configuration) throws Exception {
 		this.collection = WarcToMongo.initializeConnection(configuration);
 	}
 
 	@Override
 	public void close() throws IOException {
-		// After closing, any access to the writer will return NullPointerException
+		// After closing, any access to the writer will result in a NullPointerException
 		collection = null;
 	}
 
@@ -30,5 +31,4 @@ public class MongoWarcWriter implements WarcWriter {
 	public void write(WarcRecord record) throws IOException, InterruptedException {
 		WarcToMongo.insertRecordInCollection(collection, record);
 	}
-
 }
