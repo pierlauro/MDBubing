@@ -79,8 +79,8 @@ public class WarcToMongo {
 		// Initialize WARC reader on the provided file
 		URL url = new File(configuration.warcFilePath).toURI().toURL();
 
-		// TODO support also non-uncompressed WARC formats
-		WarcReader reader = new UncompressedWarcReader(url.openStream());
+		boolean compressed = configuration.warcFilePath.endsWith("gz");
+		WarcReader reader = compressed ? new CompressedWarcReader(url.openStream()) : new UncompressedWarcReader(url.openStream());
 		WarcRecord record = null;
 
 		// Insert in the collection one document per valid WARC record
