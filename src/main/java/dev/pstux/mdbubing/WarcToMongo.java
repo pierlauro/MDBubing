@@ -21,19 +21,20 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.InsertOneResult;
 
+import it.unimi.di.law.warc.io.CompressedWarcReader;
 import it.unimi.di.law.warc.io.UncompressedWarcReader;
 import it.unimi.di.law.warc.io.WarcFormatException;
 import it.unimi.di.law.warc.io.WarcReader;
 import it.unimi.di.law.warc.records.WarcRecord;
 
 public class WarcToMongo {
-	public static class W2MConfiguration{
+	public static class WarcToMongoConfiguration{
 		private String connectionString;
 		private String database;
 		private String collection;
 		private String warcFilePath;
 
-		public W2MConfiguration(Properties props) throws Exception {
+		public WarcToMongoConfiguration(Properties props) throws Exception {
 			for(Field f: this.getClass().getDeclaredFields()) {
 				f.setAccessible(true);
 				String name = f.getName();
@@ -47,7 +48,7 @@ public class WarcToMongo {
 
 		public static String getRequiredParameters() throws Exception{
 			StringBuffer sb = new StringBuffer("Required configuration properties:\n");
-			Arrays.stream(W2MConfiguration.class.getDeclaredFields()).forEach(f -> sb.append("\t- " + f.getName() + "\n"));
+			Arrays.stream(WarcToMongoConfiguration.class.getDeclaredFields()).forEach(f -> sb.append("\t- " + f.getName() + "\n"));
 			return sb.toString();
 		}
 	}
@@ -59,7 +60,7 @@ public class WarcToMongo {
 		final SimpleJSAP jsap = new SimpleJSAP(
 				WarcToMongo.class.getName(), "Starts a WarcToMongo...." /* TODO improve description */,
 				new Parameter[] {
-						new FlaggedOption(PROPERTIES_FILE_OPTION, JSAP.STRING_PARSER, JSAP.NO_DEFAULT, JSAP.REQUIRED, 'P', PROPERTIES_FILE_OPTION, "The properties used to configure WarcToMongo." + W2MConfiguration.getRequiredParameters()),
+						new FlaggedOption(PROPERTIES_FILE_OPTION, JSAP.STRING_PARSER, JSAP.NO_DEFAULT, JSAP.REQUIRED, 'P', PROPERTIES_FILE_OPTION, "The properties used to configure WarcToMongo." + WarcToMongoConfiguration.getRequiredParameters()),
 				}
 				);
 
@@ -70,7 +71,7 @@ public class WarcToMongo {
 		}
 
 		// Load configuration
-		W2MConfiguration configuration = loadConfiguration(jsapResult.getString(PROPERTIES_FILE_OPTION));
+		WarcToMongoConfiguration configuration = loadConfiguration(jsapResult.getString(PROPERTIES_FILE_OPTION));
 
 		// Initialize MongoDB entities
 		MongoCollection<Document> coll = initializeConnection(configuration);
@@ -99,14 +100,14 @@ public class WarcToMongo {
 		System.out.println(coll.countDocuments());
 	}
 
-	public static W2MConfiguration loadConfiguration(final String configFilePath) throws Exception {
+	public static WarcToMongoConfiguration loadConfiguration(final String configFilePath) throws Exception {
 		FileInputStream fis = new FileInputStream(configFilePath);
 		Properties configProperties =  new Properties();
 		configProperties.load(fis);
-		return new W2MConfiguration(configProperties);
+		return new WarcToMongoConfiguration(configProperties);
 	}
 
-	public static MongoCollection<Document> initializeConnection(final W2MConfiguration config){
+	public static MongoCollection<Document> initializeConnection(final WarcToMongoConfiguration config){
 		MongoClient mongoClient = MongoClients.create(config.connectionString);
 		MongoDatabase database = mongoClient.getDatabase(config.database);
 		return database.getCollection(config.collection);

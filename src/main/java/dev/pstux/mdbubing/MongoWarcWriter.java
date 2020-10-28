@@ -6,7 +6,7 @@ import org.bson.Document;
 
 import com.mongodb.client.MongoCollection;
 
-import dev.pstux.mdbubing.WarcToMongo.W2MConfiguration;
+import dev.pstux.mdbubing.WarcToMongo.WarcToMongoConfiguration;
 import it.unimi.di.law.warc.io.WarcWriter;
 import it.unimi.di.law.warc.records.WarcRecord;
 
@@ -17,7 +17,7 @@ public class MongoWarcWriter implements WarcWriter {
 		this(WarcToMongo.loadConfiguration(configFilePath));
 	}
 
-	public MongoWarcWriter(final W2MConfiguration configuration) throws Exception {
+	public MongoWarcWriter(final WarcToMongoConfiguration configuration) throws Exception {
 		this.collection = WarcToMongo.initializeConnection(configuration);
 	}
 
