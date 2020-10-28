@@ -1,5 +1,8 @@
 package dev.pstux.mdbubing;
 
+import static dev.pstux.mdbubing.TestConstants.NUM_VALID_TEST_WARC_RECORDS;
+import static dev.pstux.mdbubing.TestConstants.TEST_WARC_RESOURCE_PATH;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -20,12 +23,6 @@ import it.unimi.di.law.warc.records.WarcRecord;
 
 public class BSONWarcProcessorTest {
 	private final BSONWarcProcessor processor = BSONWarcProcessor.INSTANCE;
-
-	// WARC file used for testing (records from a mongodb homepage crawling)
-	private final String TEST_WARC_RESOURCE_PATH = "/mongodb-homepage.warc";
-
-	// Number of valid WARC records in the test file before an invalid record
-	private final int NUM_VALID_TEST_WARC_RECORDS = 3;
 
 	@Test
 	/** Test that all record types supported by BUbiNG are processed */
