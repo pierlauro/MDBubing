@@ -5,6 +5,8 @@ import com.martiansoftware.jsap.JSAP;
 import com.martiansoftware.jsap.JSAPResult;
 import com.martiansoftware.jsap.Parameter;
 import com.martiansoftware.jsap.SimpleJSAP;
+import com.mongodb.MongoException;
+import com.mongodb.MongoWriteConcernException;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
@@ -26,6 +28,7 @@ import org.bson.Document;
 
 public class WarcToMongo {
   public static class WarcToMongoConfiguration {
+    // TODO document that eventual majority concern should be specified in the connection string
     private String connectionString;
     private String database;
     private String collection;
@@ -131,12 +134,23 @@ public class WarcToMongo {
     return database.getCollection(config.collection);
   }
 
-  // TODO allow to specify write concerns
+  // This method never throws in order to ensure forward progress
   public static InsertOneResult insertRecordInCollection(
       MongoCollection<Document> coll, WarcRecord record) {
+    byte retries = 0;
     Document d = BSONWarcProcessor.INSTANCE.process(record, 0);
     if (d != null) {
-      return coll.insertOne(d);
+      while (retries < 3) {
+        try {
+          return coll.insertOne(d);
+        } catch (MongoWriteConcernException e) {
+          // TODO log exception
+          // TODO which policy to apply in this case?
+        } catch (MongoException ex) {
+          retries++;
+          // TODO log exception
+        }
+      }
     }
     return null;
   }
