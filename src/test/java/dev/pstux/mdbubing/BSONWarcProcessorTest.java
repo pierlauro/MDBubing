@@ -1,7 +1,7 @@
 package dev.pstux.mdbubing;
 
-import static dev.pstux.mdbubing.TestConstants.NUM_VALID_TEST_WARC_RECORDS;
-import static dev.pstux.mdbubing.TestConstants.TEST_WARC_RESOURCE_PATH;
+import static dev.pstux.mdbubing.TestCommon.Constants.NUM_VALID_TEST_WARC_RECORDS;
+import static dev.pstux.mdbubing.TestCommon.Constants.TEST_WARC_RESOURCE_PATH;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
