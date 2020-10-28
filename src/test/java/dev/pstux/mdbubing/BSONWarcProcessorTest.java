@@ -28,7 +28,7 @@ public class BSONWarcProcessorTest {
 	private final int NUM_VALID_TEST_WARC_RECORDS = 3;
 
 	@Test
-	/* Test that all record types supported by BUbiNG are processed */
+	/** Test that all record types supported by BUbiNG are processed */
 	public void testSupportedRecordTypes() throws Exception	{
 		URL url = BSONWarcProcessorTest.class.getResource(TEST_WARC_RESOURCE_PATH);
 
@@ -46,7 +46,7 @@ public class BSONWarcProcessorTest {
 	}
 
 	@Test
-	/* Test that all standard WARC headers are properly processed */
+	/** Test that all standard WARC headers are properly processed */
 	public void testWarcHeaders() throws Exception	{
 		URL url = BSONWarcProcessorTest.class.getResource(TEST_WARC_RESOURCE_PATH);
 
@@ -64,7 +64,7 @@ public class BSONWarcProcessorTest {
 	}
 
 	@Test
-	/* Test that all additional WARC headers are properly processed */
+	/** Test that all additional WARC headers are properly processed */
 	public void testAdditionalHeaders() throws Exception	{
 		URL url = BSONWarcProcessorTest.class.getResource(TEST_WARC_RESOURCE_PATH);
 		boolean foundDuplicateField = false;
@@ -99,7 +99,7 @@ public class BSONWarcProcessorTest {
 	}
 
 	@Test
-	// Test that the processor doesn't process records with payload size >= 16MB
+	/** Test that the processor doesn't process records with payload size >= 16MB */
 	public void testRecordSizeExceedsMDBLimit() {
 		WarcRecord hugeRecord = Mockito.mock(WarcRecord.class);
 		long sizeLimit = BSONWarcProcessor.MDB_DOCUMENT_SIZE_LIMIT;
