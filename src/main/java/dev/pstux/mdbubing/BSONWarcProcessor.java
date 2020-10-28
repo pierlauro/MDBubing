@@ -16,6 +16,8 @@ import it.unimi.di.law.warc.util.ByteArraySessionOutputBuffer;
 
 public class BSONWarcProcessor implements Processor<Document> {
 	public static final BSONWarcProcessor INSTANCE = new BSONWarcProcessor();
+	public static final String ADDITIONAL_HEADERS_MDB_FIELD_NAME = "headers";
+	public static final String PAYLOAD_MDB_FIELD_NAME = "payload";
 	private BSONWarcProcessor() {}
 
 	private static final ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -54,7 +56,7 @@ public class BSONWarcProcessor implements Processor<Document> {
 			r.write(os, buf);
 			String s = os.toString();
 			s = s.substring(s.length() - (int)r.getWarcContentLength());
-			obj.append("record", s);
+			obj.append(PAYLOAD_MDB_FIELD_NAME, s);
 		} catch (IOException e) {
 			// TODO log error with record ID
 		}
@@ -91,6 +93,6 @@ public class BSONWarcProcessor implements Processor<Document> {
 			}
 		}
 
-		obj.append("headers", headers);
+		obj.append(ADDITIONAL_HEADERS_MDB_FIELD_NAME, headers);
 	}
 }

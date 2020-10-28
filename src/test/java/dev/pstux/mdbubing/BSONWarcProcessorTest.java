@@ -1,28 +1,98 @@
 package dev.pstux.mdbubing;
 
-import java.net.URL;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import org.apache.http.Header;
+import org.bson.Document;
 import org.junit.Test;
 
 import it.unimi.di.law.warc.io.UncompressedWarcReader;
-import it.unimi.di.law.warc.io.WarcFormatException;
 import it.unimi.di.law.warc.io.WarcReader;
+import it.unimi.di.law.warc.records.AbstractWarcRecord;
 import it.unimi.di.law.warc.records.WarcRecord;
 
 public class BSONWarcProcessorTest {
 	private final BSONWarcProcessor processor = BSONWarcProcessor.INSTANCE;
 
+	// WARC file used for testing (records from a mongodb homepage crawling)
+	private final String TEST_WARC_RESOURCE_PATH = "/mongodb-homepage.warc";
+
+	// Number of valid WARC records in the test file before an invalid record
+	private final int NUM_VALID_TEST_WARC_RECORDS = 3;
+
 	@Test
-	public void test() throws Exception	{
-		URL url = BSONWarcProcessorTest.class.getResource("/mongodb-homepage.warc");
+	/* Test that all record types supported by BUbiNG are processed */
+	public void testSupportedRecordTypes() throws Exception	{
+		URL url = BSONWarcProcessorTest.class.getResource(TEST_WARC_RESOURCE_PATH);
+
+		String[] expectedWarcTypes = {"warcinfo", "request", "response"};	
+
 		WarcReader reader = new UncompressedWarcReader(url.openStream());
 		WarcRecord record;
-		try {
-			while((record= reader.read()) != null) {
-				processor.process(record, 0);
-			}
-		}catch(WarcFormatException e) {
-			// TODO log error - some WARC record types are currently unsupported
+		for(int i = 0; i < NUM_VALID_TEST_WARC_RECORDS; i++) {
+			record = reader.read();
+			Document d = processor.process(record, 0);
+
+			// Test that the supported types of WARC records are correctly processed
+			assertEquals(d.get("WARC-Type"), expectedWarcTypes[i]);
 		}
+	}
+
+	@Test
+	/* Test that all standard WARC headers are properly processed */
+	public void testWarcHeaders() throws Exception	{
+		URL url = BSONWarcProcessorTest.class.getResource(TEST_WARC_RESOURCE_PATH);
+
+		WarcReader reader = new UncompressedWarcReader(url.openStream());
+		WarcRecord record;
+		for(int i = 0; i < NUM_VALID_TEST_WARC_RECORDS; i++) {
+			record = reader.read();
+			Header[] headers = record.getWarcHeaders().getAllHeaders();
+
+			Document d = processor.process(record, 0);
+			for(Header h: headers) {
+				assertEquals(h.getValue(), d.get(h.getName()));
+			}
+		}
+	}
+
+	@Test
+	/* Test that all additional WARC headers are properly processed */
+	public void testAdditionalHeaders() throws Exception	{
+		URL url = BSONWarcProcessorTest.class.getResource(TEST_WARC_RESOURCE_PATH);
+		boolean foundDuplicateField = false;
+
+		WarcReader reader = new UncompressedWarcReader(url.openStream());
+		for(int i = 0; i < NUM_VALID_TEST_WARC_RECORDS; i++) {
+			AbstractWarcRecord record = (AbstractWarcRecord)reader.read();
+			Header[] headers = record.getAllHeaders();
+
+			Document d = processor.process(record, 0);
+
+			final String field = BSONWarcProcessor.ADDITIONAL_HEADERS_MDB_FIELD_NAME;
+
+			@SuppressWarnings("unchecked")
+			HashMap<String, Object> map = (HashMap<String, Object>)d.get(field);
+
+			for(Header h: headers) {
+				String headerValue = h.getValue();
+				Object value = map.get(h.getName());
+				if(value instanceof String) {
+					assertEquals(headerValue, value);
+				}else if(value instanceof ArrayList) {
+					// There could be duplicate header names (e.g. multiple Set-Cookie)
+					assertTrue(ArrayList.class.cast(value).contains(headerValue));
+					foundDuplicateField = true;
+				}
+			}
+		}
+
+		// Canary ensuring at least one duplicated header was encountered/tested
+		assertTrue(foundDuplicateField);
 	}
 }
