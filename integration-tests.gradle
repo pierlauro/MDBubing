@@ -1,0 +1,48 @@
+dockerRun {
+    name 'mongodb'
+    image 'mongo'
+    ports '27017:27017'
+    daemonize true
+    env 'MONGO_INITDB_ROOT_USERNAME': 'your_username', 'MONGO_INITDB_ROOT_PASSWORD': 'your_strong_password'
+}
+
+sourceSets {
+  test {
+    resources {
+      srcDir "src/test"
+    }
+  }
+}
+
+task integrationTest(type: JavaExec) {
+	doFirst{
+		// Wait for MongoDB instance to be up in container
+		sleep(5 * 1000)
+	}
+
+    group = 'Execution'
+    description = 'Run the main class with JavaExecTask'
+    classpath = sourceSets.test.runtimeClasspath
+    main = 'dev.pstux.mdbubing.IntegrationTest'
+    args '-P' + rootProject.projectDir + '/src/test/resources/WarcToMongo-sample-configuration.properties'
+}
+
+task removeContainer() {
+	doFirst{
+		// Wait for MongoDB container to be down before removing
+		sleep(3 * 1000)
+	}
+
+	dependsOn('dockerRemoveContainer')
+}
+
+task testWithDocker {
+    dependsOn('dockerRun')
+    dependsOn('integrationTest')
+    dependsOn('dockerStop')
+    dependsOn('removeContainer')
+
+    tasks.findByName('integrationTest').mustRunAfter 'dockerRun'
+    tasks.findByName('dockerStop').mustRunAfter 'integrationTest'
+    tasks.findByName('removeContainer').mustRunAfter 'dockerStop'   
+}

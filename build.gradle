@@ -1,7 +1,10 @@
 plugins {
 	id 'java-library'
 	id 'com.github.sherter.google-java-format' version '0.9'
+    id 'com.palantir.docker-run' version '0.25.0'
 }
+
+apply from: 'integration-tests.gradle'
 
 repositories {
     jcenter()
