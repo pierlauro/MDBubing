@@ -18,7 +18,6 @@ public class BSONWarcProcessor implements Processor<Document> {
   public static final String ADDITIONAL_HEADERS_MDB_FIELD_NAME = "headers";
   public static final String PAYLOAD_MDB_FIELD_NAME = "payload";
 
-  // TODO Replace the two following static fields to allow multithreading
   private final ByteArrayOutputStream os = new ByteArrayOutputStream();
   private final ByteArraySessionOutputBuffer buf = new ByteArraySessionOutputBuffer();
 
@@ -52,10 +51,13 @@ public class BSONWarcProcessor implements Processor<Document> {
 
     try {
       // TODO optimize
-      r.write(os, buf);
-      String s = os.toString();
-      s = s.substring(s.length() - (int) r.getWarcContentLength());
-      obj.append(PAYLOAD_MDB_FIELD_NAME, s);
+      String payload;
+      synchronized (os) {
+        r.write(os, buf);
+        payload = os.toString();
+      }
+      payload = payload.substring(payload.length() - (int) r.getWarcContentLength());
+      obj.append(PAYLOAD_MDB_FIELD_NAME, payload);
     } catch (IOException e) {
       // TODO log error with record ID
     }
