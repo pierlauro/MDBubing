@@ -1,3 +1,4 @@
 # MDBubing
 
-<img src='https://github.com/pierlauro/MDBubing/workflows/CI-gradle/badge.svg'>
+![unit-tests+lint](https://github.com/pierlauro/MDBubing/workflows/unit-tests+linting/badge.svg)
+![integration-tests](https://github.com/pierlauro/MDBubing/workflows/integration-tests/badge.svg)
