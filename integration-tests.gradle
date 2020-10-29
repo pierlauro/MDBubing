@@ -1,11 +1,3 @@
-dockerRun {
-    name 'mongodb'
-    image 'mongo'
-    ports '27017:27017'
-    daemonize true
-    env 'MONGO_INITDB_ROOT_USERNAME': 'your_username', 'MONGO_INITDB_ROOT_PASSWORD': 'your_strong_password'
-}
-
 sourceSets {
   test {
     resources {
@@ -27,6 +19,14 @@ task integrationTest(type: JavaExec) {
     args '-P' + rootProject.projectDir + '/src/test/resources/WarcToMongo-sample-configuration.properties'
 }
 
+dockerRun {
+    name 'mongodb'
+    image 'mongo'
+    ports '27017:27017'
+    daemonize true
+    env 'MONGO_INITDB_ROOT_USERNAME': 'your_username', 'MONGO_INITDB_ROOT_PASSWORD': 'your_strong_password'
+}
+
 task removeContainer() {
 	doFirst{
 		// Wait for MongoDB container to be down before removing
@@ -36,7 +36,7 @@ task removeContainer() {
 	dependsOn('dockerRemoveContainer')
 }
 
-task testWithDocker {
+task integrationTestWithDocker {
     dependsOn('dockerRun')
     dependsOn('integrationTest')
     dependsOn('dockerStop')
