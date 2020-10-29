@@ -1,4 +1,4 @@
-name: CI-gradle
+name: unit-tests+linting
 
 on:
   push:
