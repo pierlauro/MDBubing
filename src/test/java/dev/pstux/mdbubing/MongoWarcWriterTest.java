@@ -45,7 +45,7 @@ public class MongoWarcWriterTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testInitAndClose() throws Exception {
-    Field collectionField = writer.getClass().getDeclaredFields()[0];
+    Field collectionField = writer.getClass().getDeclaredField("collection");
     collectionField.setAccessible(true);
     assertEquals((MongoCollection<Document>) collectionField.get(writer), mockCollection);
     writer.close();
