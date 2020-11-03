@@ -11,8 +11,12 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.http.Header;
 import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BSONWarcProcessor implements Processor<Document> {
+  private static final Logger LOGGER = LoggerFactory.getLogger(BSONWarcProcessor.class);
+
   public static final BSONWarcProcessor INSTANCE = new BSONWarcProcessor();
   public static final long MDB_DOCUMENT_SIZE_LIMIT = 16 * 1024 * 1024;
   public static final String ADDITIONAL_HEADERS_MDB_FIELD_NAME = "headers";
@@ -38,7 +42,7 @@ public class BSONWarcProcessor implements Processor<Document> {
     // It's not worth it to compute the exact document size for each record.
     // If document size is > 16 MB, the insert in MongoDB will simply fail.
     if (r.getWarcContentLength() >= MDB_DOCUMENT_SIZE_LIMIT) {
-      // TODO log error with record ID
+      LOGGER.error("Record too big. ID: {} - URI: {}", r.getWarcRecordId(), r.getWarcTargetURI());
       return null;
     }
 
@@ -59,7 +63,11 @@ public class BSONWarcProcessor implements Processor<Document> {
       payload = payload.substring(payload.length() - (int) r.getWarcContentLength());
       obj.append(PAYLOAD_MDB_FIELD_NAME, payload);
     } catch (IOException e) {
-      // TODO log error with record ID
+      LOGGER.error(
+          "Couldn't add payload to document. ID: {} - URI: {}",
+          r.getWarcRecordId(),
+          r.getWarcTargetURI());
+      return null;
     }
 
     return obj;

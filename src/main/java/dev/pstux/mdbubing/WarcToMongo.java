@@ -25,8 +25,12 @@ import java.util.Arrays;
 import java.util.Properties;
 import org.apache.commons.cli.MissingArgumentException;
 import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WarcToMongo {
+  private static final Logger LOGGER = LoggerFactory.getLogger(WarcToMongo.class);
+
   public static class WarcToMongoConfiguration {
     // TODO document that eventual majority concern should be specified in the connection string
     private String connectionString;
@@ -111,7 +115,7 @@ public class WarcToMongo {
           break;
         }
       } catch (WarcFormatException e) {
-        // TODO log exception
+        LOGGER.error("Skipping record due to: ", e);
         continue;
       }
 
@@ -137,21 +141,37 @@ public class WarcToMongo {
   // This method never throws in order to ensure forward progress
   public static InsertOneResult insertRecordInCollection(
       MongoCollection<Document> coll, WarcRecord record) {
-    byte retries = 0;
+    byte retries = 3;
     Document d = BSONWarcProcessor.INSTANCE.process(record, 0);
     if (d != null) {
-      while (retries < 3) {
+      while (retries-- > 0) {
         try {
           return coll.insertOne(d);
         } catch (MongoWriteConcernException e) {
-          // TODO log exception
+          LOGGER.warn(
+              "Couldn't satisfy WriteConcern (Missing retries: {}). ID: {} - URI: {}\\n{}",
+              retries,
+              record.getWarcRecordId(),
+              record.getWarcTargetURI(),
+              e);
           // TODO which policy to apply in this case?
-        } catch (MongoException ex) {
+          // Consider update with upsert once mapped WARC id on _id field
+        } catch (MongoException e) {
           retries++;
-          // TODO log exception
+          LOGGER.warn(
+              "Exception while trying to insert document (Missing retries: {}). ID: {} - URI: {}\n{}",
+              retries,
+              record.getWarcRecordId(),
+              record.getWarcTargetURI(),
+              e);
         }
       }
     }
+    LOGGER.error(
+        "Couldn't insert document. ID: {} - URI: {}",
+        retries,
+        record.getWarcRecordId(),
+        record.getWarcTargetURI());
     return null;
   }
 }
